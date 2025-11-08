@@ -1,0 +1,51 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Go
+bin/
+build/
+dist/
+*.exe
+*.out
+*.test
+
+# Dependencies
+vendor/
+node_modules/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+
+# Docker
+**/pgdata/
+**/db_data/
+**/.docker/
+**/tmp/
+docker-compose.override.yml
+
+# Logs & Cache
+logs/
+*.log
+.cache/
+coverage/
+.tmp/
+
+# Frontend Builds (React / Next.js / Angular)
+.next/
+out/
+dist/
+build/
+
+# Misc
+*.pid
+*.pid.lock
+*.db
+*.sqlite*

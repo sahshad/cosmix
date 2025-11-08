@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  auth-service:
+    build: ./services/auth-service
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./services/auth-service/.env
+    depends_on:
+      - db
+    networks:
+      - cosmix-net
+
+  db:
+    image: postgres:16
+    container_name: cosmix-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cosmix_auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - cosmix-net
+
+networks:
+  cosmix-net:
+
+volumes:
+  pgdata:
