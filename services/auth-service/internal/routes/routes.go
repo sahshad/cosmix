@@ -10,12 +10,13 @@ import (
 )
 
 func RegisterRoutes(router *gin.Engine, db *gorm.DB) {
-	api := router.Group("/api/auth")
+	api := router.Group("/")
 
 	userRepo := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepo)
 	authController := controllers.NewAuthController(authService)
 
+	api.GET("/health", authController.HealthCheck)
 	api.POST("/register", authController.Register)
 	api.POST("/login", authController.Login)
 	api.GET("/refresh", authController.Refresh)

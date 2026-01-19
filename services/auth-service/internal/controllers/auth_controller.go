@@ -18,6 +18,10 @@ func NewAuthController(authService services.AuthService) *AuthController {
 	return &AuthController{authService: authService}
 }
 
+func (ctrl *AuthController) HealthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "auth service is ok"})
+}
+
 func (ctrl *AuthController) Register(c *gin.Context) {
 	var registerDTO dto.RegisterDTO
 	if err := c.ShouldBindJSON(&registerDTO); err != nil {

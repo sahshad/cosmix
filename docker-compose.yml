@@ -1,11 +1,21 @@
 version: '3.9'
 
 services:
+  gateway-service:
+    build: ./services/gateway-service
+    container_name: gateway-service
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./services/gateway-service/.env
+    depends_on:
+      - auth-service
+    networks:
+      - cosmix-net
+
   auth-service:
     build: ./services/auth-service
     container_name: auth-service
-    ports:
-      - "8080:8080"
     env_file:
       - ./services/auth-service/.env
     depends_on:
