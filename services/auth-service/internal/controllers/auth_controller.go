@@ -3,19 +3,26 @@ package controllers
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"auth-service/internal/dto"
+	"auth-service/internal/events"
 	"auth-service/internal/services"
 
 	"github.com/gin-gonic/gin"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type AuthController struct {
 	authService services.AuthService
+	rabbitCh    *amqp.Channel
 }
 
-func NewAuthController(authService services.AuthService) *AuthController {
-	return &AuthController{authService: authService}
+func NewAuthController(authService services.AuthService, rabbitCh *amqp.Channel) *AuthController {
+	return &AuthController{
+		authService: authService,
+		rabbitCh:    rabbitCh,
+	}
 }
 
 func (ctrl *AuthController) HealthCheck(c *gin.Context) {
@@ -35,14 +42,19 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 		return
 	}
 
+	// Publish user created event
+	events.PublishUserCreated(ctrl.rabbitCh, events.UserCreatedEvent{
+		AuthUserID: user.ID,
+		FirstName:  registerDTO.FirstName,
+		LastName:   registerDTO.LastName,
+		CreatedAt:  time.Now().UTC(),
+	})
+
 	c.JSON(http.StatusCreated, gin.H{
 		"user": gin.H{
-			"id":         user.ID,
-			"first_name": user.FirstName,
-			"last_name":  user.LastName,
-			"email":      user.Email,
-			"user_name":  user.Username,
-			"role":       user.Role,
+			"id":        user.ID,
+			"email":     user.Email,
+			"user_name": registerDTO.Username,
 		},
 	})
 }
@@ -72,12 +84,8 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"accessToken": access,
 		"user": gin.H{
-			"id":         user.ID,
-			"first_name": user.FirstName,
-			"last_name":  user.LastName,
-			"email":      user.Email,
-			"user_name":  user.Username,
-			"role":       user.Role,
+			"id":    user.ID,
+			"email": user.Email,
 		},
 	})
 }

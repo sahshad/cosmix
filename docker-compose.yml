@@ -10,6 +10,7 @@ services:
       - ./services/gateway-service/.env
     depends_on:
       - auth-service
+      - user-service
     networks:
       - cosmix-net
 
@@ -20,6 +21,27 @@ services:
       - ./services/auth-service/.env
     depends_on:
       - db
+      - rabbitmq
+    networks:
+      - cosmix-net
+
+  user-service:
+    build: ./services/user-service
+    container_name: user-service
+    env_file:
+      - ./services/user-service/.env
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - cosmix-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: cosmix-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - cosmix-net
 
@@ -30,16 +52,18 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cosmix_auth
+      # POSTGRES_DB: cosmix_auth
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - cosmix-net
 
 networks:
   cosmix-net:
+
 
 volumes:
   pgdata:

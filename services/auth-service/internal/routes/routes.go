@@ -6,15 +6,16 @@ import (
 	"auth-service/internal/services"
 
 	"github.com/gin-gonic/gin"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.Engine, db *gorm.DB) {
+func RegisterRoutes(router *gin.Engine, db *gorm.DB, rabbitCh *amqp.Channel) {
 	api := router.Group("/")
 
 	userRepo := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepo)
-	authController := controllers.NewAuthController(authService)
+	authController := controllers.NewAuthController(authService, rabbitCh)
 
 	api.GET("/health", authController.HealthCheck)
 	api.POST("/register", authController.Register)

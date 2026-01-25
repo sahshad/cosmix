@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"auth-service/internal/database"
-	"auth-service/internal/events"
-	"auth-service/internal/routes"
+	"user-service/internal/database"
+	"user-service/internal/events"
+	"user-service/internal/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -26,7 +26,7 @@ func main() {
 	// Configuration
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 
 	rabbitURL := os.Getenv("RABBITMQ_URL")
@@ -43,15 +43,14 @@ func main() {
 	// RabbitMQ
 	rabbitChannel := events.NewRabbitMQChannel(rabbitURL)
 	if rabbitChannel == nil {
-		log.Println("RabbitMQ unavailable, events will not be published")
+		log.Println("RabbitMQ unavailable, running without consumer")
 	}
 
 	// HTTP router
 	router := gin.Default()
-
 	routes.RegisterRoutes(router, db, rabbitChannel)
 
-	log.Println("Auth service running on :" + port)
+	log.Println("User service running on :" + port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}

@@ -21,6 +21,8 @@ export function authenticate(
 
   try {
     req.user = jwt.verify(token, env.jwtPublicKey) as jwt.JwtPayload
+    console.log("in middleware", req.user)
+    req.headers["X-User-Id"] = req.user.userId.toString()
     next()
   } catch {
     return res.status(401).json({ message: "Invalid token" })
