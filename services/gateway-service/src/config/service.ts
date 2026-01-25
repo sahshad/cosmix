@@ -1,5 +1,6 @@
 import { env } from "./env"
 
 export const services = {
-  auth: env.authServiceUrl
+  auth: env.authServiceUrl,
+  user: env.userServiceUrl,
 }

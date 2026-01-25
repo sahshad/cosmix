@@ -40,7 +40,7 @@ func GenerateAccessToken(userID uint, role string) (string, error) {
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 		},

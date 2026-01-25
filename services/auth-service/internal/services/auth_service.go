@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"auth-service/internal/dto"
 	"auth-service/internal/models"
@@ -40,13 +41,12 @@ func (svc *authService) Register(input dto.RegisterDTO) (*models.User, error) {
 	}
 
 	user := &models.User{
-		FirstName:    input.FirstName,
-		LastName:     input.LastName,
-		Username:     input.Username,
-		Email:        input.Email,
-		PasswordHash: string(pwHash),
-		DateOfBirth:  input.DateOfBirth,
-		Role:         models.RoleUser,
+		Email:          input.Email,
+		PasswordHash:   string(pwHash),
+		CreatedAt:      time.Now().UTC(),
+		LastLoginAt:    time.Now().UTC(),
+		EmailVerified:  false,
+		IsActive:       true,
 	}
 
 	if err := svc.userRepo.Create(user); err != nil {
@@ -64,11 +64,11 @@ func (svc *authService) Login(input dto.LoginDTO) (string, string, *models.User,
 		return "", "", nil, errors.New("invalid credentials")
 	}
 
-	access, err := utils.GenerateAccessToken(user.ID, string(user.Role))
+	access, err := utils.GenerateAccessToken(user.ID, "user")
 	if err != nil {
 		return "", "", nil, err
 	}
-	refresh, err := utils.GenerateRefreshToken(user.ID, string(user.Role))
+	refresh, err := utils.GenerateRefreshToken(user.ID, "user")
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -85,11 +85,11 @@ func (svc *authService) Refresh(refreshToken string) (string, string, error) {
 		return "", "", errors.New("invalid user")
 	}
 
-	newAccess, err := utils.GenerateAccessToken(claims.UserID, claims.Role)
+	newAccess, err := utils.GenerateAccessToken(claims.UserID, "user")
 	if err != nil {
 		return "", "", err
 	}
-	newRefresh, err := utils.GenerateRefreshToken(claims.UserID, claims.Role)
+	newRefresh, err := utils.GenerateRefreshToken(claims.UserID, "user")
 	if err != nil {
 		return "", "", err
 	}
