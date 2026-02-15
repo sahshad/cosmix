@@ -1,35 +1,20 @@
 package routes
 
 import (
-	"user-service/internal/controllers"
-	consumer "user-service/internal/events/consumer"
-	"user-service/internal/repositories"
-	"user-service/internal/services"
+	"user-service/internal/app"
 
 	"github.com/gin-gonic/gin"
-	amqp "github.com/rabbitmq/amqp091-go"
-	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.Engine, db *gorm.DB, rabbitCh *amqp.Channel) {
+func RegisterRoutes(router *gin.Engine, container *app.Container) {
 	api := router.Group("/")
 
-	profileRepo := repositories.NewUserProfileRepository(db)
-	profileService := services.NewUserProfileService(profileRepo)
-	profileController := controllers.NewUserProfileController(profileService, rabbitCh)
-
-	followRepo := repositories.NewFollowRepository(db)
-	followService := services.NewFollowService(followRepo)
-	followController := controllers.NewFollowController(followService)
-
-	consumer.ConsumeUserCreated(rabbitCh, profileService)
-
-	api.GET("/health", profileController.HealthCheck)
-	api.GET("/me", profileController.GetMe)
-	api.PUT("/me", profileController.UpdateMe)
-	api.GET("/username/:username", profileController.GetByUsername)
-	api.POST("/:id/follow", followController.Follow)
-	api.DELETE("/:id/unfollow", followController.Unfollow)
-	api.GET("/:id/followers", followController.GetFollowers)
-	api.GET("/:id/following", followController.GetFollowing)
+	api.GET("/health", container.UserProfileController.HealthCheck)
+	api.GET("/me", container.UserProfileController.GetMe)
+	api.PUT("/me", container.UserProfileController.UpdateMe)
+	api.GET("/username/:username", container.UserProfileController.GetByUsername)
+	api.POST("/:id/follow", container.FollowController.Follow)
+	api.DELETE("/:id/unfollow", container.FollowController.Unfollow)
+	api.GET("/:id/followers", container.FollowController.GetFollowers)
+	api.GET("/:id/following", container.FollowController.GetFollowing)
 }

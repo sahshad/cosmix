@@ -1,4 +1,4 @@
-package events
+package consumer
 
 import (
 	"encoding/json"
@@ -12,9 +12,31 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func ConsumeUserUpdated(ch *amqp.Channel, userService services.AuthService) {
+func ConsumeUserUpdated(ch *amqp.Channel, userService services.AuthServiceInterface) {
+	q, err := ch.QueueDeclare(
+		"user.updated",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Fatal("Queue declaration failed:", err)
+	}
+
+	if err := ch.QueueBind(
+		q.Name,
+		"user.updated",
+		"auth.events",
+		false,
+		nil,
+	); err != nil {
+		log.Fatal("Queue binding failed:", err)
+	}
+
 	msgs, err := ch.Consume(
-		"auth.user.updated",
+		q.Name,
 		"",
 		true, // auto-ack (OK for MVP)
 		false,

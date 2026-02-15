@@ -1,4 +1,4 @@
-package events
+package consumer
 
 import (
 	"encoding/json"
@@ -12,9 +12,32 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func ConsumeUserCreated(ch *amqp.Channel, userProfileService services.UserProfileService) {
+func ConsumeUserCreated(ch *amqp.Channel, userProfileService services.UserProfileServiceInterface) {
+
+	q, err := ch.QueueDeclare(
+		"user.created",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Fatal("Queue declaration failed:", err)
+	}
+
+	if err := ch.QueueBind(
+		q.Name,
+		"user.created",
+		"auth.events",
+		false,
+		nil,
+	); err != nil {
+		log.Fatal("Queue binding failed:", err)
+	}
+
 	msgs, err := ch.Consume(
-		"auth.user.created",
+		q.Name,
 		"",
 		true, // auto-ack (OK for MVP)
 		false,

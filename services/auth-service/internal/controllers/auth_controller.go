@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"auth-service/internal/dto"
-	"auth-service/internal/events/publisher"
+	publisher "auth-service/internal/messaging/publisher"
 	"auth-service/internal/services"
 
 	authEvents "cosmix-events/auth"
@@ -15,11 +15,11 @@ import (
 )
 
 type AuthController struct {
-	authService services.AuthService
+	authService services.AuthServiceInterface
 	rabbitCh    *amqp.Channel
 }
 
-func NewAuthController(authService services.AuthService, rabbitCh *amqp.Channel) *AuthController {
+func NewAuthController(authService services.AuthServiceInterface, rabbitCh *amqp.Channel) *AuthController {
 	return &AuthController{
 		authService: authService,
 		rabbitCh:    rabbitCh,
@@ -44,7 +44,7 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 	}
 
 	// Publish user created event
-	events.PublishUserCreated(ctrl.rabbitCh, authEvents.UserCreated{
+	publisher.PublishUserCreated(ctrl.rabbitCh, authEvents.UserCreated{
 		EventVersion: "v1",
 		AuthUserID:   user.ID,
 		Email:        user.Email,

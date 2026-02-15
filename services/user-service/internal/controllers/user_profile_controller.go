@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"user-service/internal/dto"
-	publisher "user-service/internal/events/publisher"
+	"user-service/internal/messaging/publisher"
 	authEvents "cosmix-events/auth"
 	"user-service/internal/services"
 
@@ -14,11 +14,11 @@ import (
 )
 
 type UserProfileController struct {
-	service    services.UserProfileService
+	service    services.UserProfileServiceInterface
 	rabbitCh *ampqp.Channel
 }
 
-func NewUserProfileController(service services.UserProfileService, rabbitCh *ampqp.Channel) *UserProfileController {
+func NewUserProfileController(service services.UserProfileServiceInterface, rabbitCh *ampqp.Channel) *UserProfileController {
 	return &UserProfileController{service: service, rabbitCh: rabbitCh}
 }
 

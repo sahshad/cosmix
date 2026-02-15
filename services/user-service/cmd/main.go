@@ -4,8 +4,10 @@ import (
 	"log"
 	"os"
 
+	"user-service/internal/app"
 	"user-service/internal/database"
-	"user-service/internal/events/rabbitmq"
+	// "user-service/internal/events/rabbitmq"
+	"user-service/internal/messaging"
 	"user-service/internal/routes"
 
 	"github.com/gin-gonic/gin"
@@ -41,14 +43,17 @@ func main() {
 	}
 
 	// RabbitMQ
-	rabbitChannel := events.NewRabbitMQChannel(rabbitURL)
+	rabbitChannel := messaging.Connect(rabbitURL)
 	if rabbitChannel == nil {
 		log.Println("RabbitMQ unavailable, running without consumer")
 	}
 
+	container := app.NewContainer(db, rabbitChannel)
+
 	// HTTP router
 	router := gin.Default()
-	routes.RegisterRoutes(router, db, rabbitChannel)
+	routes.RegisterRoutes(router, container)
+	app.RegisterConsumers(container)
 
 	log.Println("User service running on :" + port)
 	if err := router.Run(":" + port); err != nil {
