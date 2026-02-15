@@ -9,6 +9,9 @@ require (
 	gorm.io/gorm v1.26.1
 )
 
+require cosmix-events v0.0.0
+replace cosmix-events => ../../cosmix-events
+
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect

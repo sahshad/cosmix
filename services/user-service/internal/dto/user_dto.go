@@ -3,6 +3,7 @@ package dto
 import "time"
 
 type UpdateProfileDTO struct {
+	Email       *string `json:"email"`
 	FirstName   *string `json:"first_name"`
 	LastName    *string `json:"last_name"`
 	Username    *string `json:"username" binding:"omitempty,alphanum"`
@@ -23,4 +24,12 @@ type UserProfileResponse struct {
 	Bio         *string    `json:"bio,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
+}
+
+type UserCreatedFromDTO struct {
+	AuthUserID uint
+	Email string
+	FirstName string
+	LastName string
+	CreatedAt time.Time
 }

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"user-service/internal/database"
-	"user-service/internal/events"
+	"user-service/internal/events/rabbitmq"
 	"user-service/internal/routes"
 
 	"github.com/gin-gonic/gin"

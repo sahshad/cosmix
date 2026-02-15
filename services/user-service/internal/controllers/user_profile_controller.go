@@ -5,17 +5,21 @@ import (
 	"strconv"
 
 	"user-service/internal/dto"
+	publisher "user-service/internal/events/publisher"
+	authEvents "cosmix-events/auth"
 	"user-service/internal/services"
 
 	"github.com/gin-gonic/gin"
+	ampqp "github.com/rabbitmq/amqp091-go"
 )
 
 type UserProfileController struct {
-	service services.UserProfileService
+	service    services.UserProfileService
+	rabbitCh *ampqp.Channel
 }
 
-func NewUserProfileController(service services.UserProfileService) *UserProfileController {
-	return &UserProfileController{service: service}
+func NewUserProfileController(service services.UserProfileService, rabbitCh *ampqp.Channel) *UserProfileController {
+	return &UserProfileController{service: service, rabbitCh: rabbitCh}
 }
 
 func (ctrl *UserProfileController) HealthCheck(c *gin.Context) {
@@ -92,6 +96,15 @@ func (ctrl *UserProfileController) UpdateMyProfile(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	if input.Email != nil {
+		publisher.PublishUserUpdated(ctrl.rabbitCh, authEvents.UserUpdated{
+			EventVersion: "v1",
+			AuthUserID:   uint(userID),
+			Email:        *input.Email,
+			UpdatedAt:    *profile.UpdatedAt,
+		})
 	}
 
 	c.JSON(http.StatusOK, profile)

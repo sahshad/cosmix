@@ -8,6 +8,9 @@ require (
 	gorm.io/gorm v1.26.1
 )
 
+require cosmix-events v0.0.0
+replace cosmix-events => ../../cosmix-events
+
 require github.com/joho/godotenv v1.5.1
 
 require (

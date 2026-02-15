@@ -4,19 +4,15 @@ import (
 	"encoding/json"
 	"log"
 
+	"user-service/internal/dto"
 	"user-service/internal/services"
+
+	authEvents "cosmix-events/auth"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type UserCreatedEvent struct {
-	AuthUserID uint   `json:"auth_user_id"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-}
-
 func ConsumeUserCreated(ch *amqp.Channel, userProfileService services.UserProfileService) {
-	log.Println("Consuming user.created events...")
 	msgs, err := ch.Consume(
 		"auth.user.created",
 		"",
@@ -33,14 +29,18 @@ func ConsumeUserCreated(ch *amqp.Channel, userProfileService services.UserProfil
 
 	go func() {
 		for msg := range msgs {
-			var event UserCreatedEvent
+			var event authEvents.UserCreated
 			json.Unmarshal(msg.Body, &event)
 
-			err := userProfileService.CreateFromAuthEvent(
-				event.AuthUserID,
-				event.FirstName,
-				event.LastName,
-			)
+			userCreatedEvent := dto.UserCreatedFromDTO{
+				AuthUserID: event.AuthUserID,
+				Email:      event.Email,
+				FirstName:  event.FirstName,
+				LastName:   event.LastName,
+				CreatedAt:  event.CreatedAt,
+			}
+
+			err := userProfileService.CreateFromAuthEvent(userCreatedEvent)
 
 			if err != nil {
 				log.Println("User creation failed:", err)

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"user-service/internal/controllers"
-	"user-service/internal/events"
+	consumer "user-service/internal/events/consumer"
 	"user-service/internal/repositories"
 	"user-service/internal/services"
 
@@ -16,13 +16,13 @@ func RegisterRoutes(router *gin.Engine, db *gorm.DB, rabbitCh *amqp.Channel) {
 
 	profileRepo := repositories.NewUserProfileRepository(db)
 	profileService := services.NewUserProfileService(profileRepo)
-	profileController := controllers.NewUserProfileController(profileService)
+	profileController := controllers.NewUserProfileController(profileService, rabbitCh)
 
 	followRepo := repositories.NewFollowRepository(db)
 	followService := services.NewFollowService(followRepo)
 	followController := controllers.NewFollowController(followService)
-	
-	events.ConsumeUserCreated(rabbitCh, profileService)
+
+	consumer.ConsumeUserCreated(rabbitCh, profileService)
 
 	api.GET("/health", profileController.HealthCheck)
 	api.GET("/me", profileController.GetMe)

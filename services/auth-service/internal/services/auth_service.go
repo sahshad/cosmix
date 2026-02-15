@@ -17,6 +17,7 @@ type AuthService interface {
 	Login(input dto.LoginDTO) (accessToken string, refreshToken string, user *models.User, err error)
 	Refresh(refreshToken string) (newAccess string, newRefresh string, err error)
 	GetByID(id uint) (*models.User, error)
+	UpdateFromAuthEvent(event dto.UserUpdatedFromDTO) error
 }
 
 type authService struct {
@@ -31,9 +32,9 @@ func (svc *authService) Register(input dto.RegisterDTO) (*models.User, error) {
 	if _, err := svc.userRepo.FindByEmail(input.Email); err == nil {
 		return nil, errors.New("email already in use")
 	}
-	if _, err := svc.userRepo.FindByUsername(input.Username); err == nil {
-		return nil, errors.New("username already in use")
-	}
+	// if _, err := svc.userRepo.FindByUsername(input.Username); err == nil {
+	// 	return nil, errors.New("username already in use")
+	// }
 
 	pwHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -41,12 +42,12 @@ func (svc *authService) Register(input dto.RegisterDTO) (*models.User, error) {
 	}
 
 	user := &models.User{
-		Email:          input.Email,
-		PasswordHash:   string(pwHash),
-		CreatedAt:      time.Now().UTC(),
-		LastLoginAt:    time.Now().UTC(),
-		EmailVerified:  false,
-		IsActive:       true,
+		Email:         input.Email,
+		PasswordHash:  string(pwHash),
+		CreatedAt:     time.Now().UTC(),
+		LastLoginAt:   time.Now().UTC(),
+		EmailVerified: false,
+		IsActive:      true,
 	}
 
 	if err := svc.userRepo.Create(user); err != nil {
@@ -94,9 +95,19 @@ func (svc *authService) Refresh(refreshToken string) (string, string, error) {
 		return "", "", err
 	}
 	return newAccess, newRefresh, nil
-}
-
+} 
 
 func (svc *authService) GetByID(id uint) (*models.User, error) {
 	return svc.userRepo.FindByID(id)
+}
+
+func (svc *authService) UpdateFromAuthEvent(event dto.UserUpdatedFromDTO) error {
+	user, err := svc.userRepo.FindByID(event.AuthUserID)
+	if err != nil {
+		return err
+	}
+
+	user.Email = event.Email
+	user.UpdatedAt = &event.UpdatedAt
+	return svc.userRepo.Update(user)
 }

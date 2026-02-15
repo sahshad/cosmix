@@ -14,7 +14,7 @@ type UserProfileService interface {
 	GetProfileByUsername(username string) (*dto.UserProfileResponse, error)
 	UpdateProfile(userID uint, input dto.UpdateProfileDTO) (*dto.UserProfileResponse, error)
 	CreateProfile(profile *models.UserProfile) error
-	CreateFromAuthEvent(authUserID uint, firstName string, lastName string) error
+	CreateFromAuthEvent(event dto.UserCreatedFromDTO) error
 }
 
 type userProfileService struct {
@@ -83,12 +83,13 @@ func (svc *userProfileService) CreateProfile(profile *models.UserProfile) error 
 	return svc.repo.Create(profile)
 }
 
-func (svc *userProfileService) CreateFromAuthEvent(authUserID uint, firstName string, lastName string) error {
+func (svc *userProfileService) CreateFromAuthEvent(event dto.UserCreatedFromDTO) error {
 	profile := &models.UserProfile{
-		UserID:     authUserID,
-		FirstName:  firstName,
-		LastName:   lastName,
-		CreatedAt:  time.Now().UTC(),
+		UserID:    event.AuthUserID,
+		Email:     event.Email,
+		FirstName: event.FirstName,
+		LastName:  event.LastName,
+		CreatedAt: event.CreatedAt,
 	}
 	return svc.repo.Create(profile)
 }
@@ -104,7 +105,7 @@ func (svc *userProfileService) GetProfileByUsername(username string) (*dto.UserP
 func (svc *userProfileService) toResponse(profile *models.UserProfile) *dto.UserProfileResponse {
 	return &dto.UserProfileResponse{
 		ID:          profile.ID,
-		UserID:  profile.UserID,
+		UserID:      profile.UserID,
 		FirstName:   profile.FirstName,
 		LastName:    profile.LastName,
 		Username:    profile.Username,

@@ -6,9 +6,10 @@ import (
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	authEvents "cosmix-events/auth"
 )
 
-func PublishUserCreated(ch *amqp.Channel, event UserCreatedEvent) {
+func PublishUserCreated(ch *amqp.Channel, event authEvents.UserCreated) {
 	body, _ := json.Marshal(event)
 
 	err := ch.PublishWithContext(

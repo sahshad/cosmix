@@ -12,7 +12,13 @@ import { userRoutes } from "./routes/user.routes"
 export const app = express()
 
 app.use(helmet())
-app.use(cors())
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["Content-Length", "Content-Type", "Authorization", "X-Requested-With"],
+}))
 app.use(rateLimiter)
 
 app.use("/api/health", healthRoutes)
