@@ -6,24 +6,24 @@ import (
 	"user-service/internal/repositories"
 )
 
-type FollowService interface {
+type FollowServiceInterface interface {
 	Follow(followerID uint, followingID uint) error
 	Unfollow(followerID uint, followingID uint) error
 	GetFollowers(userID uint) ([]uint, error)
 	GetFollowing(userID uint) ([]uint, error)
 }
 
-type followService struct {
-	repo repositories.FollowRepository
+type FollowService struct {
+	repo repositories.FollowRepositoryInterface
 }
 
-func NewFollowService(repo repositories.FollowRepository) FollowService {
-	return &followService{
+func NewFollowService(repo repositories.FollowRepositoryInterface) FollowServiceInterface {
+	return &FollowService{
 		repo: repo,
 	}
 }
 
-func (svc *followService) Follow(followerID, followingID uint) error {
+func (svc *FollowService) Follow(followerID, followingID uint) error {
 	if followerID == followingID {
 		return errors.New("cannot follow yourself")
 	}
@@ -43,14 +43,14 @@ func (svc *followService) Follow(followerID, followingID uint) error {
 	return svc.repo.Create(follow)
 }
 
-func (svc *followService) Unfollow(followerID, followingID uint) error {
+func (svc *FollowService) Unfollow(followerID, followingID uint) error {
 	return svc.repo.Delete(followerID, followingID)
 }
 
-func (svc *followService) GetFollowers(userID uint) ([]uint, error) {
+func (svc *FollowService) GetFollowers(userID uint) ([]uint, error) {
 	return svc.repo.GetFollowers(userID)
 }
 
-func (svc *followService) GetFollowing(userID uint) ([]uint, error) {
+func (svc *FollowService) GetFollowing(userID uint) ([]uint, error) {
 	return svc.repo.GetFollowing(userID)
 }

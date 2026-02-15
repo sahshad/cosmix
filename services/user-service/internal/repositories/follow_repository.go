@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type FollowRepository interface {
+type FollowRepositoryInterface interface {
 	Create(follow *models.Follow) error
 	Delete(followerID, followingID uint) error
 	IsFollowing(followerID, followingID uint) (bool, error)
@@ -16,24 +16,24 @@ type FollowRepository interface {
 	GetFollowingCount(userID uint) (int64, error)
 }
 
-type followRepo struct {
+type FollowRepository struct {
 	db *gorm.DB
 }
 
-func NewFollowRepository(db *gorm.DB) FollowRepository {
-	return &followRepo{db: db}
+func NewFollowRepository(db *gorm.DB) *FollowRepository {
+	return &FollowRepository{db: db}
 }
 
-func (repo *followRepo) Create(follow *models.Follow) error {
+func (repo *FollowRepository) Create(follow *models.Follow) error {
 	return repo.db.Create(follow).Error
 }
 
-func (repo *followRepo) Delete(followerID, followingID uint) error {
+func (repo *FollowRepository) Delete(followerID, followingID uint) error {
 	return repo.db.Where("follower_id = ? AND following_id = ?", followerID, followingID).
 		Delete(&models.Follow{}).Error
 }
 
-func (repo *followRepo) IsFollowing(followerID, followingID uint) (bool, error) {
+func (repo *FollowRepository) IsFollowing(followerID, followingID uint) (bool, error) {
 	var count int64
 	err := repo.db.Model(&models.Follow{}).
 		Where("follower_id = ? AND following_id = ?", followerID, followingID).
@@ -41,7 +41,7 @@ func (repo *followRepo) IsFollowing(followerID, followingID uint) (bool, error) 
 	return count > 0, err
 }
 
-func (repo *followRepo) GetFollowers(userID uint) ([]uint, error) {
+func (repo *FollowRepository) GetFollowers(userID uint) ([]uint, error) {
 	var followers []uint
 	err := repo.db.Model(&models.Follow{}).
 		Where("following_id = ?", userID).
@@ -49,7 +49,7 @@ func (repo *followRepo) GetFollowers(userID uint) ([]uint, error) {
 	return followers, err
 }
 
-func (repo *followRepo) GetFollowing(userID uint) ([]uint, error) {
+func (repo *FollowRepository) GetFollowing(userID uint) ([]uint, error) {
 	var following []uint
 	err := repo.db.Model(&models.Follow{}).
 		Where("follower_id = ?", userID).
@@ -57,7 +57,7 @@ func (repo *followRepo) GetFollowing(userID uint) ([]uint, error) {
 	return following, err
 }
 
-func (repo *followRepo) GetFollowerCount(userID uint) (int64, error) {
+func (repo *FollowRepository) GetFollowerCount(userID uint) (int64, error) {
 	var count int64
 	err := repo.db.Model(&models.Follow{}).
 		Where("following_id = ?", userID).
@@ -65,7 +65,7 @@ func (repo *followRepo) GetFollowerCount(userID uint) (int64, error) {
 	return count, err
 }
 
-func (repo *followRepo) GetFollowingCount(userID uint) (int64, error) {
+func (repo *FollowRepository) GetFollowingCount(userID uint) (int64, error) {
 	var count int64
 	err := repo.db.Model(&models.Follow{}).
 		Where("follower_id = ?", userID).

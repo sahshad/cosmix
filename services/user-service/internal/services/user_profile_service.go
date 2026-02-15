@@ -8,26 +8,26 @@ import (
 	"user-service/internal/repositories"
 )
 
-type UserProfileService interface {
+type UserProfileServiceInterface interface {
 	GetProfile(userID uint) (*dto.UserProfileResponse, error)
 	GetProfileByID(id uint) (*dto.UserProfileResponse, error)
 	GetProfileByUsername(username string) (*dto.UserProfileResponse, error)
 	UpdateProfile(userID uint, input dto.UpdateProfileDTO) (*dto.UserProfileResponse, error)
 	CreateProfile(profile *models.UserProfile) error
-	CreateFromAuthEvent(authUserID uint, firstName string, lastName string) error
+	CreateFromAuthEvent(event dto.UserCreatedFromDTO) error
 }
 
-type userProfileService struct {
-	repo repositories.UserProfileRepository
+type UserProfileService struct {
+	repo repositories.UserProfileRepositoryInterface
 }
 
-func NewUserProfileService(repo repositories.UserProfileRepository) UserProfileService {
-	return &userProfileService{
+func NewUserProfileService(repo repositories.UserProfileRepositoryInterface) UserProfileServiceInterface {
+	return &UserProfileService{
 		repo: repo,
 	}
 }
 
-func (svc *userProfileService) GetProfile(userID uint) (*dto.UserProfileResponse, error) {
+func (svc *UserProfileService) GetProfile(userID uint) (*dto.UserProfileResponse, error) {
 	profile, err := svc.repo.FindByUserID(userID)
 	if err != nil {
 		return nil, errors.New("profile not found")
@@ -35,7 +35,7 @@ func (svc *userProfileService) GetProfile(userID uint) (*dto.UserProfileResponse
 	return svc.toResponse(profile), nil
 }
 
-func (svc *userProfileService) GetProfileByID(id uint) (*dto.UserProfileResponse, error) {
+func (svc *UserProfileService) GetProfileByID(id uint) (*dto.UserProfileResponse, error) {
 	profile, err := svc.repo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("profile not found")
@@ -43,7 +43,7 @@ func (svc *userProfileService) GetProfileByID(id uint) (*dto.UserProfileResponse
 	return svc.toResponse(profile), nil
 }
 
-func (svc *userProfileService) UpdateProfile(userID uint, input dto.UpdateProfileDTO) (*dto.UserProfileResponse, error) {
+func (svc *UserProfileService) UpdateProfile(userID uint, input dto.UpdateProfileDTO) (*dto.UserProfileResponse, error) {
 	profile, err := svc.repo.FindByUserID(userID)
 	if err != nil {
 		return nil, errors.New("profile not found")
@@ -79,21 +79,22 @@ func (svc *userProfileService) UpdateProfile(userID uint, input dto.UpdateProfil
 	return svc.toResponse(profile), nil
 }
 
-func (svc *userProfileService) CreateProfile(profile *models.UserProfile) error {
+func (svc *UserProfileService) CreateProfile(profile *models.UserProfile) error {
 	return svc.repo.Create(profile)
 }
 
-func (svc *userProfileService) CreateFromAuthEvent(authUserID uint, firstName string, lastName string) error {
+func (svc *UserProfileService) CreateFromAuthEvent(event dto.UserCreatedFromDTO) error {
 	profile := &models.UserProfile{
-		UserID:     authUserID,
-		FirstName:  firstName,
-		LastName:   lastName,
-		CreatedAt:  time.Now().UTC(),
+		UserID:    event.AuthUserID,
+		Email:     event.Email,
+		FirstName: event.FirstName,
+		LastName:  event.LastName,
+		CreatedAt: event.CreatedAt,
 	}
 	return svc.repo.Create(profile)
 }
 
-func (svc *userProfileService) GetProfileByUsername(username string) (*dto.UserProfileResponse, error) {
+func (svc *UserProfileService) GetProfileByUsername(username string) (*dto.UserProfileResponse, error) {
 	profile, err := svc.repo.FindByUsername(username)
 	if err != nil {
 		return nil, errors.New("profile not found")
@@ -101,10 +102,10 @@ func (svc *userProfileService) GetProfileByUsername(username string) (*dto.UserP
 	return svc.toResponse(profile), nil
 }
 
-func (svc *userProfileService) toResponse(profile *models.UserProfile) *dto.UserProfileResponse {
+func (svc *UserProfileService) toResponse(profile *models.UserProfile) *dto.UserProfileResponse {
 	return &dto.UserProfileResponse{
 		ID:          profile.ID,
-		UserID:  profile.UserID,
+		UserID:      profile.UserID,
 		FirstName:   profile.FirstName,
 		LastName:    profile.LastName,
 		Username:    profile.Username,

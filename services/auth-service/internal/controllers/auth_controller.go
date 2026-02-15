@@ -6,19 +6,20 @@ import (
 	"time"
 
 	"auth-service/internal/dto"
-	"auth-service/internal/events"
+	publisher "auth-service/internal/messaging/publisher"
 	"auth-service/internal/services"
 
+	authEvents "cosmix-events/auth"
 	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type AuthController struct {
-	authService services.AuthService
+	authService services.AuthServiceInterface
 	rabbitCh    *amqp.Channel
 }
 
-func NewAuthController(authService services.AuthService, rabbitCh *amqp.Channel) *AuthController {
+func NewAuthController(authService services.AuthServiceInterface, rabbitCh *amqp.Channel) *AuthController {
 	return &AuthController{
 		authService: authService,
 		rabbitCh:    rabbitCh,
@@ -43,18 +44,20 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 	}
 
 	// Publish user created event
-	events.PublishUserCreated(ctrl.rabbitCh, events.UserCreatedEvent{
-		AuthUserID: user.ID,
-		FirstName:  registerDTO.FirstName,
-		LastName:   registerDTO.LastName,
-		CreatedAt:  time.Now().UTC(),
+	publisher.PublishUserCreated(ctrl.rabbitCh, authEvents.UserCreated{
+		EventVersion: "v1",
+		AuthUserID:   user.ID,
+		Email:        user.Email,
+		FirstName:    registerDTO.FirstName,
+		LastName:     registerDTO.LastName,
+		CreatedAt:    time.Now().UTC(),
 	})
 
 	c.JSON(http.StatusCreated, gin.H{
 		"user": gin.H{
-			"id":        user.ID,
-			"email":     user.Email,
-			"user_name": registerDTO.Username,
+			"id":    user.ID,
+			"email": user.Email,
+			// "user_name": registerDTO.Username,
 		},
 	})
 }
@@ -82,7 +85,7 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 	c.SetCookie("refresh_token", refresh, 60*60*24*30, "/", domain, secure, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"accessToken": access,
+		"access_token": access,
 		"user": gin.H{
 			"id":    user.ID,
 			"email": user.Email,

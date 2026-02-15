@@ -1,25 +1,16 @@
 package routes
 
 import (
-	"auth-service/internal/controllers"
-	"auth-service/internal/repositories"
-	"auth-service/internal/services"
-
+	app "auth-service/internal/app"
 	"github.com/gin-gonic/gin"
-	amqp "github.com/rabbitmq/amqp091-go"
-	"gorm.io/gorm"
 )
 
-func RegisterRoutes(router *gin.Engine, db *gorm.DB, rabbitCh *amqp.Channel) {
+func RegisterRoutes(router *gin.Engine, container *app.Container) {
 	api := router.Group("/")
 
-	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo)
-	authController := controllers.NewAuthController(authService, rabbitCh)
-
-	api.GET("/health", authController.HealthCheck)
-	api.POST("/register", authController.Register)
-	api.POST("/login", authController.Login)
-	api.GET("/refresh", authController.Refresh)
-	api.POST("/logout", authController.Logout)
+	api.GET("/health", container.AuthController.HealthCheck)
+	api.POST("/register", container.AuthController.Register)
+	api.POST("/login", container.AuthController.Login)
+	api.GET("/refresh", container.AuthController.Refresh)
+	api.POST("/logout", container.AuthController.Logout)
 }

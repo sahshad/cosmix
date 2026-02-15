@@ -9,11 +9,12 @@ WORKDIR /app
 RUN apk add --no-cache git
 
 # Copy go.mod and go.sum and download dependencies
-COPY go.* ./
+COPY services/user-service/go.* ./
+COPY cosmix-events /cosmix-events
 RUN go mod download
 
 # Copy the rest of the code
-COPY . .
+COPY services/user-service/ .
 
 # Build the Go binary
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o user-service ./cmd/main.go

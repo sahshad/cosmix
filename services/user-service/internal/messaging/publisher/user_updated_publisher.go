@@ -1,4 +1,4 @@
-package events
+package publisher
 
 import (
 	"context"
@@ -6,15 +6,16 @@ import (
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	authEvents "cosmix-events/auth"
 )
 
-func PublishUserCreated(ch *amqp.Channel, event UserCreatedEvent) {
+func PublishUserUpdated(ch *amqp.Channel, event authEvents.UserUpdated) {
 	body, _ := json.Marshal(event)
 
 	err := ch.PublishWithContext(
 		context.Background(),
-		"",
-		"auth.user.created",
+		"auth.events",
+		"user.updated",
 		false,
 		false,
 		amqp.Publishing{
@@ -24,6 +25,6 @@ func PublishUserCreated(ch *amqp.Channel, event UserCreatedEvent) {
 	)
 
 	if err != nil {
-		log.Println("Failed to publish user.created event:", err)
+		log.Println("Failed to publish user.updated event:", err)
 	}
 }

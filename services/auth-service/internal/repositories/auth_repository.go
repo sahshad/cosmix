@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository interface {
+type UserRepositoryInterface interface {
 	Create(u *models.User) error
 	FindByEmail(email string) (*models.User, error)
 	FindByID(id uint) (*models.User, error)
@@ -14,19 +14,19 @@ type UserRepository interface {
 	Update(u *models.User) error
 }
 
-type userRepo struct {
+type UserRepo struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepo{db: db}
+func NewUserRepository(db *gorm.DB) *UserRepo {
+	return &UserRepo{db: db}
 }
 
-func (repo *userRepo) Create(u *models.User) error {
+func (repo *UserRepo) Create(u *models.User) error {
 	return repo.db.Create(u).Error
 }
 
-func (repo *userRepo) FindByEmail(email string) (*models.User, error) {
+func (repo *UserRepo) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	if err := repo.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (repo *userRepo) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (repo *userRepo) FindByID(id uint) (*models.User, error) {
+func (repo *UserRepo) FindByID(id uint) (*models.User, error) {
 	var user models.User
 	if err := repo.db.First(&user, id).Error; err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (repo *userRepo) FindByID(id uint) (*models.User, error) {
 	return &user, nil
 }
 
-func (repo *userRepo) FindByUsername(username string) (*models.User, error) {
+func (repo *UserRepo) FindByUsername(username string) (*models.User, error) {
 	var user models.User
 	if err := repo.db.Where("username = ?", username).First(&user).Error; err != nil {
 		return nil, err
@@ -50,6 +50,6 @@ func (repo *userRepo) FindByUsername(username string) (*models.User, error) {
 	return &user, nil
 }
 
-func (repo *userRepo) Update(u *models.User) error {
+func (repo *UserRepo) Update(u *models.User) error {
 	return repo.db.Save(u).Error
 }

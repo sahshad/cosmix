@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserProfileRepository interface {
+type UserProfileRepositoryInterface interface {
 	Create(profile *models.UserProfile) error
 	FindByUserID(userID uint) (*models.UserProfile, error)
 	FindByID(id uint) (*models.UserProfile, error)
@@ -15,19 +15,19 @@ type UserProfileRepository interface {
 	Delete(id uint) error
 }
 
-type userProfileRepo struct {
+type UserProfileRepo struct {
 	db *gorm.DB
 }
 
-func NewUserProfileRepository(db *gorm.DB) UserProfileRepository {
-	return &userProfileRepo{db: db}
+func NewUserProfileRepository(db *gorm.DB) *UserProfileRepo {
+	return &UserProfileRepo{db: db}
 }
 
-func (repo *userProfileRepo) Create(profile *models.UserProfile) error {
+func (repo *UserProfileRepo) Create(profile *models.UserProfile) error {
 	return repo.db.Create(profile).Error
 }
 
-func (repo *userProfileRepo) FindByUserID(userID uint) (*models.UserProfile, error) {
+func (repo *UserProfileRepo) FindByUserID(userID uint) (*models.UserProfile, error) {
 	var profile models.UserProfile
 	if err := repo.db.Where("user_id = ?", userID).First(&profile).Error; err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (repo *userProfileRepo) FindByUserID(userID uint) (*models.UserProfile, err
 	return &profile, nil
 }
 
-func (repo *userProfileRepo) FindByID(id uint) (*models.UserProfile, error) {
+func (repo *UserProfileRepo) FindByID(id uint) (*models.UserProfile, error) {
 	var profile models.UserProfile
 	if err := repo.db.First(&profile, id).Error; err != nil {
 		return nil, err
@@ -43,11 +43,11 @@ func (repo *userProfileRepo) FindByID(id uint) (*models.UserProfile, error) {
 	return &profile, nil
 }
 
-func (repo *userProfileRepo) Update(profile *models.UserProfile) error {
+func (repo *UserProfileRepo) Update(profile *models.UserProfile) error {
 	return repo.db.Save(profile).Error
 }
 
-func (repo *userProfileRepo) FindByUsername(username string) (*models.UserProfile, error) {
+func (repo *UserProfileRepo) FindByUsername(username string) (*models.UserProfile, error) {
 	var profile models.UserProfile
 	if err := repo.db.Where("username = ?", username).First(&profile).Error; err != nil {
 		return nil, err
@@ -55,6 +55,6 @@ func (repo *userProfileRepo) FindByUsername(username string) (*models.UserProfil
 	return &profile, nil
 }
 
-func (repo *userProfileRepo) Delete(id uint) error {
+func (repo *UserProfileRepo) Delete(id uint) error {
 	return repo.db.Delete(&models.UserProfile{}, id).Error
 }

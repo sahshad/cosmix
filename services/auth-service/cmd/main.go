@@ -4,8 +4,9 @@ import (
 	"log"
 	"os"
 
+	"auth-service/internal/app"
 	"auth-service/internal/database"
-	"auth-service/internal/events"
+	messaging "auth-service/internal/messaging"
 	"auth-service/internal/routes"
 
 	"github.com/gin-gonic/gin"
@@ -41,15 +42,18 @@ func main() {
 	}
 
 	// RabbitMQ
-	rabbitChannel := events.NewRabbitMQChannel(rabbitURL)
-	if rabbitChannel == nil {
+	rabbit := messaging.Connect(rabbitURL)
+	if rabbit == nil {
 		log.Println("RabbitMQ unavailable, events will not be published")
 	}
+
+	container := app.NewContainer(db, rabbit)
 
 	// HTTP router
 	router := gin.Default()
 
-	routes.RegisterRoutes(router, db, rabbitChannel)
+	routes.RegisterRoutes(router, container)
+	app.RegisterConsumers(container)
 
 	log.Println("Auth service running on :" + port)
 	if err := router.Run(":" + port); err != nil {

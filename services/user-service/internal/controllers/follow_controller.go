@@ -9,10 +9,10 @@ import (
 )
 
 type FollowController struct {
-	service services.FollowService
+	service services.FollowServiceInterface
 }
 
-func NewFollowController(service services.FollowService) *FollowController {
+func NewFollowController(service services.FollowServiceInterface) *FollowController {
 	return &FollowController{service: service}
 }
 

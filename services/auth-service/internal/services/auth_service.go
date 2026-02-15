@@ -12,28 +12,29 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthService interface {
+type AuthServiceInterface interface {
 	Register(input dto.RegisterDTO) (*models.User, error)
 	Login(input dto.LoginDTO) (accessToken string, refreshToken string, user *models.User, err error)
 	Refresh(refreshToken string) (newAccess string, newRefresh string, err error)
 	GetByID(id uint) (*models.User, error)
+	UpdateFromAuthEvent(event dto.UserUpdatedFromDTO) error
 }
 
-type authService struct {
-	userRepo repositories.UserRepository
+type AuthService struct {
+	userRepo repositories.UserRepositoryInterface
 }
 
-func NewAuthService(userRepo repositories.UserRepository) AuthService {
-	return &authService{userRepo: userRepo}
+func NewAuthService(userRepo repositories.UserRepositoryInterface) AuthServiceInterface {
+	return &AuthService{userRepo: userRepo}
 }
 
-func (svc *authService) Register(input dto.RegisterDTO) (*models.User, error) {
+func (svc *AuthService) Register(input dto.RegisterDTO) (*models.User, error) {
 	if _, err := svc.userRepo.FindByEmail(input.Email); err == nil {
 		return nil, errors.New("email already in use")
 	}
-	if _, err := svc.userRepo.FindByUsername(input.Username); err == nil {
-		return nil, errors.New("username already in use")
-	}
+	// if _, err := svc.userRepo.FindByUsername(input.Username); err == nil {
+	// 	return nil, errors.New("username already in use")
+	// }
 
 	pwHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -41,12 +42,12 @@ func (svc *authService) Register(input dto.RegisterDTO) (*models.User, error) {
 	}
 
 	user := &models.User{
-		Email:          input.Email,
-		PasswordHash:   string(pwHash),
-		CreatedAt:      time.Now().UTC(),
-		LastLoginAt:    time.Now().UTC(),
-		EmailVerified:  false,
-		IsActive:       true,
+		Email:         input.Email,
+		PasswordHash:  string(pwHash),
+		CreatedAt:     time.Now().UTC(),
+		LastLoginAt:   time.Now().UTC(),
+		EmailVerified: false,
+		IsActive:      true,
 	}
 
 	if err := svc.userRepo.Create(user); err != nil {
@@ -55,7 +56,7 @@ func (svc *authService) Register(input dto.RegisterDTO) (*models.User, error) {
 	return user, nil
 }
 
-func (svc *authService) Login(input dto.LoginDTO) (string, string, *models.User, error) {
+func (svc *AuthService) Login(input dto.LoginDTO) (string, string, *models.User, error) {
 	user, err := svc.userRepo.FindByEmail(input.Email)
 	if err != nil {
 		return "", "", nil, errors.New("invalid credentials")
@@ -75,7 +76,7 @@ func (svc *authService) Login(input dto.LoginDTO) (string, string, *models.User,
 	return access, refresh, user, nil
 }
 
-func (svc *authService) Refresh(refreshToken string) (string, string, error) {
+func (svc *AuthService) Refresh(refreshToken string) (string, string, error) {
 	claims, err := utils.ParseRefreshToken(refreshToken)
 	if err != nil {
 		return "", "", errors.New("invalid refresh token")
@@ -94,9 +95,19 @@ func (svc *authService) Refresh(refreshToken string) (string, string, error) {
 		return "", "", err
 	}
 	return newAccess, newRefresh, nil
+} 
+
+func (svc *AuthService) GetByID(id uint) (*models.User, error) {
+	return svc.userRepo.FindByID(id)
 }
 
+func (svc *AuthService) UpdateFromAuthEvent(event dto.UserUpdatedFromDTO) error {
+	user, err := svc.userRepo.FindByID(event.AuthUserID)
+	if err != nil {
+		return err
+	}
 
-func (svc *authService) GetByID(id uint) (*models.User, error) {
-	return svc.userRepo.FindByID(id)
+	user.Email = event.Email
+	user.UpdatedAt = &event.UpdatedAt
+	return svc.userRepo.Update(user)
 }
